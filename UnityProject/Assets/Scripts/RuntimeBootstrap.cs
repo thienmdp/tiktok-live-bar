@@ -11,6 +11,7 @@ namespace TikTokLiveGame
             // TikTok LIVE Studio captures at 60 FPS. Disable display-rate VSync so
             // high-refresh monitors cannot force uneven 60 FPS capture cadence.
             QualitySettings.vSyncCount = 0;
+            QualitySettings.pixelLightCount = 16;
             Application.targetFrameRate = 60;
             Application.runInBackground = true;
             Screen.SetResolution(540, 960, false);

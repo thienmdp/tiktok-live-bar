@@ -112,6 +112,7 @@ namespace TikTokLiveGame
             // CreateDjVideoScreen();
             CreateDjBooth();
             CreateDjPerformer();
+            CreateDiscoLights();
             // CreateArchitecturalAccentLights();
             CreateCircularTrussRig();
             // CreateLedBarRig();
@@ -123,6 +124,10 @@ namespace TikTokLiveGame
             // CreateSpeaker(5.4f);
 
             // CreateMirrorBall();
+
+            AddLight("Hell Red Light", new Vector3(-6f, 7f, 1f), new Color(1f, 0.1f, 0.1f), 4.8f, 20f);
+            AddLight("Hell Orange Light", new Vector3(6f, 7f, 0f), new Color(1f, 0.4f, 0f), 4.6f, 20f);
+            AddLight("Stage Demon Light", new Vector3(0f, 8f, -7f), new Color(0.8f, 0f, 0.2f), 5.8f, 23f);
 
             // Group club elements and push them further back to create a huge dance space
             GameObject clubRoot = new GameObject("ClubRoot");
@@ -136,10 +141,6 @@ namespace TikTokLiveGame
             clubRoot.transform.position = new Vector3(0, 0, -12f);
 
             new GameObject("Club Beat").AddComponent<ClubPulseController>();
-
-            AddLight("Hell Red Light", new Vector3(-6f, 7f, 1f), new Color(1f, 0.1f, 0.1f), 4.8f, 20f);
-            AddLight("Hell Orange Light", new Vector3(6f, 7f, 0f), new Color(1f, 0.4f, 0f), 4.6f, 20f);
-            AddLight("Stage Demon Light", new Vector3(0f, 8f, -7f), new Color(0.8f, 0f, 0.2f), 5.8f, 23f);
         }
 
         private static void CreateRaisedStage()
@@ -264,8 +265,12 @@ namespace TikTokLiveGame
             
             light.innerSpotAngle = 24f;
             light.shadows = LightShadows.Soft;
+            light.renderMode = LightRenderMode.ForcePixel;
             light.cullingMask = ~(1 << FloorLightingLayer);
-            
+        }
+
+        private static void CreateDiscoLights()
+        {
             for (int i = 0; i < 4; i++)
             {
                 GameObject obj = new($"Disco Light {i}");
@@ -276,12 +281,12 @@ namespace TikTokLiveGame
                 l.range = 25f;
                 l.spotAngle = 60f;
                 l.innerSpotAngle = 30f;
-                l.intensity = 0f;
+                l.intensity = 2.4f;
                 l.shadows = LightShadows.Soft;
-                l.cullingMask = -1; 
+                l.renderMode = LightRenderMode.ForcePixel;
+                l.cullingMask = -1;
                 DiscoLight disco = obj.AddComponent<DiscoLight>();
                 disco.index = i;
-                discoLights.Add(disco);
             }
         }
 
@@ -702,6 +707,7 @@ namespace TikTokLiveGame
             light.color = color;
             light.intensity = intensity;
             light.range = range;
+            light.renderMode = LightRenderMode.ForcePixel;
             light.cullingMask = ~(1 << FloorLightingLayer);
         }
 

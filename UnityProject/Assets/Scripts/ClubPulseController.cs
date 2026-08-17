@@ -15,7 +15,9 @@ namespace TikTokLiveGame
             bpm = ClubBeatClock.Bpm;
             foreach (Light light in FindObjectsByType<Light>(FindObjectsSortMode.None))
             {
-                if (light.name.StartsWith("Moving Head") || light.name.StartsWith("Strobe Light")) continue;
+                if (light.name.StartsWith("Moving Head") ||
+                    light.name.StartsWith("Strobe Light") ||
+                    light.name.StartsWith("Disco Light")) continue;
                 lights.Add(new LightState(light, light.intensity));
             }
             foreach (Renderer renderer in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
