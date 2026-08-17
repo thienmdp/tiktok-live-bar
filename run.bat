@@ -79,6 +79,7 @@ if not defined BRIDGE_READY (
 
 :launch_game
 echo [3/3] Dang khoi dong Game...
+call :sync_media
 if not "%BRIDGE_PORT%"=="3000" (
     echo [CANH BAO] Ban game dung san chi ket noi cong 3000.
     echo Bridge va Control Panel van chay tren cong %BRIDGE_PORT%, nhung game se khong duoc mo.
@@ -98,6 +99,20 @@ start "" "%CONTROL_URL%"
 echo.
 echo Da khoi dong. Control Panel: %CONTROL_URL%
 exit /b 0
+
+:sync_media
+if not exist "%ROOT%Build" goto :eof
+if exist "%ROOT%DJ_MUSIC" (
+    if not exist "%ROOT%Build\DJ_MUSIC" mkdir "%ROOT%Build\DJ_MUSIC"
+    copy /Y "%ROOT%DJ_MUSIC\VOLUME.txt" "%ROOT%Build\DJ_MUSIC\" >nul 2>&1
+    for %%E in (mp3 wav ogg) do copy /Y "%ROOT%DJ_MUSIC\*.%%E" "%ROOT%Build\DJ_MUSIC\" >nul 2>&1
+)
+if exist "%ROOT%DJ_VIDEO" (
+    if not exist "%ROOT%Build\DJ_VIDEO" mkdir "%ROOT%Build\DJ_VIDEO"
+    copy /Y "%ROOT%DJ_VIDEO\BPM.txt" "%ROOT%Build\DJ_VIDEO\" >nul 2>&1
+    for %%E in (mp4 mov m4v webm png jpg jpeg) do copy /Y "%ROOT%DJ_VIDEO\*.%%E" "%ROOT%Build\DJ_VIDEO\" >nul 2>&1
+)
+goto :eof
 
 :bridge_is_ready
 set "BRIDGE_READY="

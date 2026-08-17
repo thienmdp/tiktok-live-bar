@@ -174,6 +174,7 @@ namespace TikTokLiveGame
             string[] folders =
             {
                 Path.Combine(buildRoot, "DJ_VIDEO"),
+                Path.Combine(projectRoot, "DJ_VIDEO"),
                 Path.Combine(workspaceRoot, "DJ_VIDEO"),
                 Application.streamingAssetsPath
             };
@@ -196,6 +197,7 @@ namespace TikTokLiveGame
             string[] folders =
             {
                 Path.Combine(buildRoot, "DJ_VIDEO"),
+                Path.Combine(projectRoot, "DJ_VIDEO"),
                 Path.Combine(workspaceRoot, "DJ_VIDEO"),
                 Application.streamingAssetsPath
             };

@@ -45,6 +45,17 @@ if not exist "%OUTPUT_EXE%" (
     goto :failed
 )
 
+if exist "%ROOT%DJ_MUSIC" (
+    if not exist "%ROOT%Build\DJ_MUSIC" mkdir "%ROOT%Build\DJ_MUSIC"
+    copy /Y "%ROOT%DJ_MUSIC\VOLUME.txt" "%ROOT%Build\DJ_MUSIC\" >nul 2>&1
+    for %%E in (mp3 wav ogg) do copy /Y "%ROOT%DJ_MUSIC\*.%%E" "%ROOT%Build\DJ_MUSIC\" >nul 2>&1
+)
+if exist "%ROOT%DJ_VIDEO" (
+    if not exist "%ROOT%Build\DJ_VIDEO" mkdir "%ROOT%Build\DJ_VIDEO"
+    copy /Y "%ROOT%DJ_VIDEO\BPM.txt" "%ROOT%Build\DJ_VIDEO\" >nul 2>&1
+    for %%E in (mp4 mov m4v webm png jpg jpeg) do copy /Y "%ROOT%DJ_VIDEO\*.%%E" "%ROOT%Build\DJ_VIDEO\" >nul 2>&1
+)
+
 echo.
 echo Build thanh cong: %OUTPUT_EXE%
 pause
