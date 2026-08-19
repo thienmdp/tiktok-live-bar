@@ -40,6 +40,17 @@ namespace TikTokLiveGame
                 LaunchFireworks(Mathf.Clamp(Mathf.Max(2, data.fireworkBursts), 4, 7));
         }
 
+        public void PlayLikeReward(TikTokEvent data, PlayerActor actor)
+        {
+            if (data.type != "like" || string.IsNullOrWhiteSpace(data.action)) return;
+            BannerText = $"{data.nickname} — {data.label}";
+            BannerUntil = Time.unscaledTime + Mathf.Clamp(data.durationMs / 1000f, 3f, 12f);
+            if (data.fireworkBursts > 0)
+                LaunchFireworks(Mathf.Clamp(data.fireworkBursts, 2, 6));
+            if (actor != null && data.action is "camera" or "vip" or "medal")
+                StartCoroutine(Spotlight(actor, data));
+        }
+
         public void PartyBurst()
         {
             BannerText = "PARTY ENERGY MAX — CẢ SÀN CÙNG QUẨY";

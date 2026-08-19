@@ -18,6 +18,12 @@
     "windowMs": 5000,
     "maximum": 99
   },
+  "likeMilestones": {
+    "streakWindowMs": 4000,
+    "streakZoom": 10,
+    "totalTitle": 500,
+    "totalWings": 1000
+  },
   "beat": {
     "bpm": 128,
     "beatsPerBar": 4,

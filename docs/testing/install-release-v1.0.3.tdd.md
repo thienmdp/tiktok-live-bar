@@ -10,7 +10,7 @@ The share repository has no `.gitnexus/` or `.codegraph/` index, so graph-based 
 
 1. As a Windows user, I can download one release ZIP, extract it, install Node dependencies, and launch the bridge and compiled game without installing Unity.
 2. As an operator, settings in `TikTokBridge/.env` are loaded, while operating-system variables retain priority.
-3. As a Control Panel user, the ÔNG CHÚ MMO logo loads instead of returning 404.
+3. As a Control Panel user, the THIENMDP logo loads instead of returning 404.
 4. As a Windows user, batch launchers retain CRLF line endings after a GitHub checkout.
 
 ## RED/GREEN evidence

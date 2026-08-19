@@ -7,7 +7,7 @@ set "BRIDGE_DIR=%ROOT%TikTokBridge"
 set "BRIDGE_PORT=3000"
 
 echo =======================================
-echo     KHOI DONG ONG CHU MMO LIVE
+echo     KHOI DONG THIENMDP LIVE
 echo =======================================
 echo.
 
@@ -85,7 +85,9 @@ if not "%BRIDGE_PORT%"=="3000" (
     echo Bridge va Control Panel van chay tren cong %BRIDGE_PORT%, nhung game se khong duoc mo.
     goto :open_control
 )
-if exist "%ROOT%Build\OngChuMMO_Live.exe" (
+if exist "%ROOT%Build\THIENMDP_Live.exe" (
+    start "" "%ROOT%Build\THIENMDP_Live.exe"
+) else if exist "%ROOT%Build\OngChuMMO_Live.exe" (
     start "" "%ROOT%Build\OngChuMMO_Live.exe"
 ) else if exist "%ROOT%Build\TIKTOK_LIVE_BAR.exe" (
     start "" "%ROOT%Build\TIKTOK_LIVE_BAR.exe"
@@ -112,11 +114,15 @@ if exist "%ROOT%DJ_VIDEO" (
     copy /Y "%ROOT%DJ_VIDEO\BPM.txt" "%ROOT%Build\DJ_VIDEO\" >nul 2>&1
     for %%E in (mp4 mov m4v webm png jpg jpeg) do copy /Y "%ROOT%DJ_VIDEO\*.%%E" "%ROOT%Build\DJ_VIDEO\" >nul 2>&1
 )
+if exist "%ROOT%LiveAssets" (
+    if not exist "%ROOT%Build\LiveAssets" mkdir "%ROOT%Build\LiveAssets"
+    xcopy /E /Y /I "%ROOT%LiveAssets\*" "%ROOT%Build\LiveAssets\" >nul 2>&1
+)
 goto :eof
 
 :bridge_is_ready
 set "BRIDGE_READY="
-for /f "usebackq delims=" %%r in (`powershell -NoProfile -Command "try { $h = Invoke-RestMethod -Uri '%CONTROL_URL:control.html=api/health%' -TimeoutSec 2; if ($h.status -eq 'ok' -and $h.appId -eq 'ongchu-mmo-live-bridge') { 'YES' } } catch {}"`) do set "BRIDGE_READY=%%r"
+for /f "usebackq delims=" %%r in (`powershell -NoProfile -Command "try { $h = Invoke-RestMethod -Uri '%CONTROL_URL:control.html=api/health%' -TimeoutSec 2; if ($h.status -eq 'ok' -and ($h.appId -eq 'thienmdp-live-bridge' -or $h.appId -eq 'ongchu-mmo-live-bridge')) { 'YES' } } catch {}"`) do set "BRIDGE_READY=%%r"
 exit /b 0
 
 :failed

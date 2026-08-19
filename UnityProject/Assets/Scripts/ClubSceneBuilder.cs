@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine;
 
 namespace TikTokLiveGame
@@ -6,14 +7,18 @@ namespace TikTokLiveGame
     {
         private const int FloorLightingLayer = 8;
         private const float DjBoothHeightOffset = 0.85f;
+        private const float ClubRootDepthOffset = 12f;
+        private const float BackdropCenterZ = -30f;
+        private const int BackdropRenderQueue = 1990;
+        private const int DjPerformerRenderQueue = 3100;
 
         public static void Build()
         {
-            RenderSettings.ambientLight = new Color(0.15f, 0.02f, 0.05f);
-            RenderSettings.fog = false;
+            RenderSettings.ambientLight = new Color(0.08f, 0.015f, 0.03f);
+            RenderSettings.fog = true;
             RenderSettings.fogColor = new Color(0.04f, 0.005f, 0.01f);
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogDensity = 0.018f;
+            RenderSettings.fogDensity = 0.012f;
 
             Camera camera = Camera.main;
             if (camera == null)
@@ -30,115 +35,39 @@ namespace TikTokLiveGame
             camera.backgroundColor = new Color(0.01f, 0.005f, 0.025f);
             if (camera.GetComponent<ClubCameraController>() == null) camera.gameObject.AddComponent<ClubCameraController>();
 
-            // CreateArchitecturalBackdrop(); // Hide acoustic wall and panels
+            // CreateArchitecturalBackdrop(); // layered behind AmPhu texture room
 
-            Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            string path = @"D:\TIKTOK_LIVE_BAR\LiveAssets\nenamphu.png";
-            if (System.IO.File.Exists(path))
-            {
-                tex.LoadImage(System.IO.File.ReadAllBytes(path));
-                tex.filterMode = FilterMode.Trilinear;
-                tex.anisoLevel = 8;
-                tex.wrapMode = TextureWrapMode.Mirror;
-                tex.Apply();
-            }
-            Shader bgShader = Shader.Find("Unlit/Texture");
-            if (bgShader == null) bgShader = Shader.Find("Sprites/Default");
-            Material bgMat = new Material(bgShader);
-            bgMat.mainTexture = tex;
-
-            float texAspect = (float)tex.width / tex.height;
-            float H = 40f;
-            float W = H * texAspect;
-            float D = W * 3f; // Depth for side walls
-
-            Material centerMat = new Material(bgMat);
-            centerMat.mainTextureScale = new Vector2(-1, 1);
-
-            Material rightMat = new Material(bgMat);
-            rightMat.mainTextureScale = new Vector2(-3, 1);
-            rightMat.mainTextureOffset = new Vector2(-1, 0);
-
-            Material leftMat = new Material(bgMat);
-            leftMat.mainTextureScale = new Vector2(3, 1);
-            leftMat.mainTextureOffset = new Vector2(-3, 0);
-            
-            Material ceilingMat = new Material(bgMat);
-            ceilingMat.mainTextureScale = new Vector2(-1, -1); // Lật ngược để làm trần nhà phản chiếu
-            ceilingMat.mainTextureOffset = new Vector2(0, 1);
-
-            GameObject bgRoot = new GameObject("AmPhuBackdrop_Room");
-
-            GameObject centerQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            centerQuad.name = "AmPhuBackdrop_Center";
-            centerQuad.transform.SetParent(bgRoot.transform);
-            centerQuad.transform.localPosition = new Vector3(0, -3.0f, -12.5f);
-            centerQuad.transform.localScale = new Vector3(W, H, 1);
-            centerQuad.transform.localRotation = Quaternion.Euler(0, 180, 0);
-            centerQuad.GetComponent<Renderer>().sharedMaterial = centerMat;
-
-            GameObject leftQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            leftQuad.name = "AmPhuBackdrop_Left";
-            leftQuad.transform.SetParent(bgRoot.transform);
-            leftQuad.transform.localPosition = new Vector3(W / 2f, -3.0f, -12.5f + D / 2f);
-            leftQuad.transform.localScale = new Vector3(D, H, 1);
-            leftQuad.transform.localRotation = Quaternion.Euler(0, -90, 0);
-            leftQuad.GetComponent<Renderer>().sharedMaterial = leftMat;
-
-            GameObject rightQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            rightQuad.name = "AmPhuBackdrop_Right";
-            rightQuad.transform.SetParent(bgRoot.transform);
-            rightQuad.transform.localPosition = new Vector3(-W / 2f, -3.0f, -12.5f + D / 2f);
-            rightQuad.transform.localScale = new Vector3(D, H, 1);
-            rightQuad.transform.localRotation = Quaternion.Euler(0, 90, 0);
-            rightQuad.GetComponent<Renderer>().sharedMaterial = rightMat;
-            
-            // Trần nhà phản chiếu (Mirrored Ceiling) để chống hở mảng đen khi camera ngước lên quá cao
-            GameObject ceilingQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            ceilingQuad.name = "AmPhuBackdrop_Ceiling";
-            ceilingQuad.transform.SetParent(bgRoot.transform);
-            ceilingQuad.transform.localPosition = new Vector3(0, -3.0f + H / 2f, -12.5f + D / 2f);
-            ceilingQuad.transform.localScale = new Vector3(W, D, 1);
-            ceilingQuad.transform.localRotation = Quaternion.Euler(90, 180, 0); // Xoay 180 để mặt Quad hướng xuống dưới đất
-            ceilingQuad.GetComponent<Renderer>().sharedMaterial = ceilingMat;
-
-            GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            floor.name = "Invisible Dance Floor";
-            floor.transform.position = new Vector3(0f, -0.3f, -1f);
-            floor.transform.localScale = new Vector3(100f, 0.5f, 100f);
-            floor.GetComponent<Renderer>().enabled = false;
+            CreateAmPhuBackdropRoom();
+            CreateDanceFloor();
 
             CreateRaisedStage();
+            CreateArchitecturalBackdrop();
             // CreateDjVideoScreen();
             CreateDjBooth();
             CreateDjPerformer();
             CreateDiscoLights();
-            // CreateArchitecturalAccentLights();
+            CreateArchitecturalAccentLights();
             CreateCircularTrussRig();
-            // CreateLedBarRig();
+            CreateLedSideArrays();
+            CreateLedBarRig();
             CreateStrobes();
-            // CreateBackgroundQuad();
-            // CreateSmokeMachines();
+            CreateMirrorBall();
+            CreateSmokeMachines();
 
-            // CreateSpeaker(-5.4f);
-            // CreateSpeaker(5.4f);
-
-            // CreateMirrorBall();
-
-            AddLight("Hell Red Light", new Vector3(-6f, 7f, 1f), new Color(1f, 0.1f, 0.1f), 4.8f, 20f);
-            AddLight("Hell Orange Light", new Vector3(6f, 7f, 0f), new Color(1f, 0.4f, 0f), 4.6f, 20f);
-            AddLight("Stage Demon Light", new Vector3(0f, 8f, -7f), new Color(0.8f, 0f, 0.2f), 5.8f, 23f);
+            AddLight("Hell Red Light", new Vector3(-6f, 7f, 1f), new Color(1f, 0.1f, 0.1f), 3.6f, 18f);
+            AddLight("Hell Orange Light", new Vector3(6f, 7f, 0f), new Color(1f, 0.4f, 0f), 3.4f, 18f);
+            AddLight("Stage Demon Light", new Vector3(0f, 8f, -7f), new Color(0.8f, 0f, 0.2f), 4.2f, 20f);
 
             // Group club elements and push them further back to create a huge dance space
             GameObject clubRoot = new GameObject("ClubRoot");
             foreach (GameObject go in Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
             {
-                if (go.transform.parent == null && go.name != "Invisible Dance Floor" && !go.name.Contains("AmPhuBackdrop") && go.name != "Main Camera" && go != clubRoot)
+                if (go.transform.parent == null && go.name != "Dance Floor" && !go.name.Contains("AmPhuBackdrop") && go.name != "Main Camera" && go != clubRoot)
                 {
                     go.transform.SetParent(clubRoot.transform);
                 }
             }
-            clubRoot.transform.position = new Vector3(0, 0, -12f);
+            clubRoot.transform.position = new Vector3(0, 0, -ClubRootDepthOffset);
 
             new GameObject("Club Beat").AddComponent<ClubPulseController>();
         }
@@ -232,16 +161,21 @@ namespace TikTokLiveGame
             Object.Destroy(performer.GetComponent<Collider>());
             
             // Đặt vị trí ngay giữa sân khấu DJ
-            performer.transform.position = new Vector3(0f, 3.4f, -7.5f); // Đặt lên sàn DJ
+            performer.transform.position = new Vector3(0f, 3.4f, -6.85f);
             performer.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
-            performer.transform.localScale = new Vector3(4.5f, 4.5f, 1f); // Kích thước của nhân vật GIF
+            performer.transform.localScale = new Vector3(4.5f, 4.5f, 1f);
+
+            Renderer performerRenderer = performer.GetComponent<Renderer>();
+            Material djMaterial = GameMaterials.Sprite();
+            djMaterial.renderQueue = DjPerformerRenderQueue;
+            performerRenderer.sharedMaterial = djMaterial;
             
             // Thêm Script GifPlayer để tự động phát
             GifPlayer gifPlayer = performer.AddComponent<GifPlayer>();
             
-            string frameDir = System.IO.Path.Combine(Application.dataPath, "../../LiveAssets/DJ_GIF");
-            if (!System.IO.Directory.Exists(frameDir))
-                frameDir = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "LiveAssets/DJ_GIF");
+            string frameDir = FindLiveAssetFolder("DJ_GIF");
+            if (string.IsNullOrEmpty(frameDir))
+                frameDir = Path.Combine(Directory.GetCurrentDirectory(), "LiveAssets", "DJ_GIF");
             
             gifPlayer.FrameDirectory = frameDir;
             gifPlayer.FrameRate = 30f; // Tốc độ khung hình mượt mà
@@ -785,6 +719,191 @@ namespace TikTokLiveGame
             ParticleSystemRenderer renderer = machine.GetComponent<ParticleSystemRenderer>();
             renderer.material = particleMat;
             renderer.sortMode = ParticleSystemSortMode.Distance;
+        }
+
+        private static void CreateAmPhuBackdropRoom()
+        {
+            Texture2D tex = LoadBackdropTexture();
+            Shader bgShader = Shader.Find("Unlit/Texture");
+            if (bgShader == null) bgShader = Shader.Find("Sprites/Default");
+            Material bgMat = new Material(bgShader);
+            bgMat.mainTexture = tex;
+
+            float texAspect = Mathf.Max(0.5f, (float)tex.width / Mathf.Max(1, tex.height));
+            float H = 40f;
+            float W = H * texAspect;
+            float D = W * 2.4f;
+
+            Material centerMat = new Material(bgMat);
+            centerMat.mainTextureScale = new Vector2(-1, 1);
+            centerMat.renderQueue = BackdropRenderQueue;
+
+            Material rightMat = new Material(bgMat);
+            rightMat.mainTextureScale = new Vector2(-2.4f, 1);
+            rightMat.mainTextureOffset = new Vector2(-0.7f, 0);
+            rightMat.renderQueue = BackdropRenderQueue;
+
+            Material leftMat = new Material(bgMat);
+            leftMat.mainTextureScale = new Vector2(2.4f, 1);
+            leftMat.mainTextureOffset = new Vector2(-2.7f, 0);
+            leftMat.renderQueue = BackdropRenderQueue;
+
+            Material ceilingMat = new Material(bgMat);
+            ceilingMat.mainTextureScale = new Vector2(-1, -1);
+            ceilingMat.mainTextureOffset = new Vector2(0, 1);
+            ceilingMat.renderQueue = BackdropRenderQueue;
+
+            GameObject bgRoot = new GameObject("AmPhuBackdrop_Room");
+
+            GameObject centerQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            centerQuad.name = "AmPhuBackdrop_Center";
+            centerQuad.transform.SetParent(bgRoot.transform);
+            centerQuad.transform.localPosition = new Vector3(0, -2.2f, BackdropCenterZ);
+            centerQuad.transform.localScale = new Vector3(W, H, 1);
+            centerQuad.transform.localRotation = Quaternion.Euler(0, 180, 0);
+            centerQuad.GetComponent<Renderer>().sharedMaterial = centerMat;
+            Object.Destroy(centerQuad.GetComponent<Collider>());
+
+            GameObject leftQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            leftQuad.name = "AmPhuBackdrop_Left";
+            leftQuad.transform.SetParent(bgRoot.transform);
+            leftQuad.transform.localPosition = new Vector3(W / 2f, -2.2f, BackdropCenterZ + D / 2f);
+            leftQuad.transform.localScale = new Vector3(D, H, 1);
+            leftQuad.transform.localRotation = Quaternion.Euler(0, -90, 0);
+            leftQuad.GetComponent<Renderer>().sharedMaterial = leftMat;
+            Object.Destroy(leftQuad.GetComponent<Collider>());
+
+            GameObject rightQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            rightQuad.name = "AmPhuBackdrop_Right";
+            rightQuad.transform.SetParent(bgRoot.transform);
+            rightQuad.transform.localPosition = new Vector3(-W / 2f, -2.2f, BackdropCenterZ + D / 2f);
+            rightQuad.transform.localScale = new Vector3(D, H, 1);
+            rightQuad.transform.localRotation = Quaternion.Euler(0, 90, 0);
+            rightQuad.GetComponent<Renderer>().sharedMaterial = rightMat;
+            Object.Destroy(rightQuad.GetComponent<Collider>());
+
+            GameObject ceilingQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            ceilingQuad.name = "AmPhuBackdrop_Ceiling";
+            ceilingQuad.transform.SetParent(bgRoot.transform);
+            ceilingQuad.transform.localPosition = new Vector3(0, -2.2f + H / 2f, BackdropCenterZ + D / 2f);
+            ceilingQuad.transform.localScale = new Vector3(W * 1.05f, D, 1);
+            ceilingQuad.transform.localRotation = Quaternion.Euler(90, 180, 0);
+            ceilingQuad.GetComponent<Renderer>().sharedMaterial = ceilingMat;
+            Object.Destroy(ceilingQuad.GetComponent<Collider>());
+        }
+
+        private static void CreateDanceFloor()
+        {
+            GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            floor.name = "Dance Floor";
+            floor.transform.position = new Vector3(0f, -0.04f, -1f);
+            floor.transform.localScale = new Vector3(26f, 0.06f, 24f);
+            Material deck = GameMaterials.Lit(new Color(0.028f, 0.008f, 0.012f), 0.42f, 0.78f, new Color(0.012f, 0.002f, 0.004f), 0.055f, 14f);
+            floor.GetComponent<Renderer>().sharedMaterial = deck;
+            Object.Destroy(floor.GetComponent<Collider>());
+
+            Color crimson = new(1f, 0.08f, 0.18f);
+            Color violet = new(0.48f, 0.08f, 0.92f);
+            for (int index = 0; index < 14; index++)
+            {
+                float x = Mathf.Lerp(-11.5f, 11.5f, index / 13f);
+                Color glow = index % 2 == 0 ? crimson : violet;
+                CreateBox($"Floor Strip {index}", new Vector3(x, 0.01f, -1f), new Vector3(0.07f, 0.012f, 20f), glow * 0.05f, glow * 0.42f);
+            }
+            for (int index = 0; index < 8; index++)
+            {
+                float z = Mathf.Lerp(-10.5f, 8.5f, index / 7f);
+                Color glow = index % 2 == 0 ? violet : crimson;
+                CreateBox($"Floor Cross Strip {index}", new Vector3(0f, 0.01f, z), new Vector3(22f, 0.012f, 0.07f), glow * 0.04f, glow * 0.28f);
+            }
+        }
+
+        private static Texture2D LoadBackdropTexture()
+        {
+            string path = FindLiveAsset("nenamphu.png");
+            if (string.IsNullOrEmpty(path))
+                path = FindLiveAsset("nentiengioi.png");
+            if (!string.IsNullOrEmpty(path))
+            {
+                Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                tex.LoadImage(File.ReadAllBytes(path));
+                tex.filterMode = FilterMode.Trilinear;
+                tex.anisoLevel = 8;
+                tex.wrapMode = TextureWrapMode.Mirror;
+                tex.Apply();
+                Debug.Log($"Club backdrop loaded: {path}");
+                return tex;
+            }
+
+            Debug.LogWarning("Backdrop image not found in LiveAssets or DJ_VIDEO. Using procedural club backdrop.");
+            return CreateProceduralHellBackdrop();
+        }
+
+        private static Texture2D CreateProceduralHellBackdrop()
+        {
+            const int width = 1024;
+            const int height = 512;
+            Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            Color floorColor = new Color(0.05f, 0.006f, 0.012f);
+            Color midColor = new Color(0.14f, 0.018f, 0.04f);
+            Color topColor = new Color(0.04f, 0.004f, 0.01f);
+            for (int y = 0; y < height; y++)
+            {
+                float t = y / (float)(height - 1);
+                Color row = t < 0.45f
+                    ? Color.Lerp(floorColor, midColor, t / 0.45f)
+                    : Color.Lerp(midColor, topColor, (t - 0.45f) / 0.55f);
+                for (int x = 0; x < width; x++)
+                {
+                    float nx = x / (float)width;
+                    float pillar = Mathf.Abs(Mathf.Repeat(nx * 7f, 1f) - 0.5f) < 0.035f ? 0.75f : 1f;
+                    float pulse = Mathf.Sin(nx * 28f + t * 10f) * 0.018f;
+                    Color pixel = row * pillar;
+                    pixel.r += pulse + 0.02f;
+                    pixel.b += pulse * 0.35f;
+                    tex.SetPixel(x, y, pixel);
+                }
+            }
+            tex.Apply(false, true);
+            tex.filterMode = FilterMode.Trilinear;
+            tex.wrapMode = TextureWrapMode.Mirror;
+            return tex;
+        }
+
+        private static string FindLiveAsset(string fileName)
+        {
+            foreach (string folder in GetMediaRoots())
+            {
+                string path = Path.Combine(folder, fileName);
+                if (File.Exists(path)) return path;
+            }
+            return null;
+        }
+
+        private static string FindLiveAssetFolder(string folderName)
+        {
+            foreach (string root in GetMediaRoots())
+            {
+                string path = Path.Combine(root, folderName);
+                if (Directory.Exists(path)) return path;
+            }
+            return null;
+        }
+
+        private static string[] GetMediaRoots()
+        {
+            string buildRoot = Directory.GetParent(Application.dataPath)?.FullName ?? Application.dataPath;
+            string projectRoot = Directory.GetParent(buildRoot)?.FullName ?? buildRoot;
+            string workspaceRoot = Directory.GetParent(projectRoot)?.FullName ?? projectRoot;
+            return new[]
+            {
+                Path.Combine(buildRoot, "LiveAssets"),
+                Path.Combine(projectRoot, "LiveAssets"),
+                Path.Combine(workspaceRoot, "LiveAssets"),
+                Path.Combine(buildRoot, "DJ_VIDEO"),
+                Path.Combine(projectRoot, "DJ_VIDEO"),
+                Path.Combine(workspaceRoot, "DJ_VIDEO")
+            };
         }
     }
 }

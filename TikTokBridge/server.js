@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
-   ÔNG CHÚ MMO — TikTok Live Bridge Server
-   © 2025 ÔNG CHÚ MMO — ongchummo.com
+   THIENMDP — TikTok Live Bridge Server
+   © 2025 THIENMDP — ongchummo.com
    Phát hành theo giấy phép MIT. Xem file ../LICENSE.
 ═══════════════════════════════════════════════════════════ */
 
@@ -29,6 +29,7 @@ const giftConfig = require('./config/gifts.json');
 const initialMasterConfig = require('./config/master.json');
 const initialObservedGifts = require('./config/observed-gifts.json');
 const { normalizeText, sanitizeMasterConfig, resolveMasterRule, applyRule, applyBuiltInChatCommand } = require('./src/master/rules');
+const { createLikeTracker, applyLikeMilestones, resetLikeTracker } = require('./src/likes/milestones');
 const {
     sanitizeGameEvent,
     isLoopbackAddress,
@@ -72,6 +73,7 @@ let masterConfig = sanitizeMasterConfig(initialMasterConfig);
 const recentEventIds = new Map();
 const sessionPlayers = new Map();
 const sessionVipScores = new Map();
+const sessionLikeStats = createLikeTracker();
 const observedGifts = new Map((Array.isArray(initialObservedGifts) ? initialObservedGifts : [])
     .map(gift => [String(gift.giftId || gift.giftName || ''), gift])
     .filter(([key]) => key));
@@ -129,7 +131,7 @@ app.use('/assets', express.static(assetsDir, staticOptions));
 app.use('/vendor/three', express.static(path.join(__dirname, 'node_modules', 'three', 'build'), staticOptions));
 
 app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok', appId: 'ongchu-mmo-live-bridge', version: '1.0.0' });
+    res.json({ status: 'ok', appId: 'thienmdp-live-bridge', version: '1.0.0' });
 });
 
 app.get('/api/config', (_req, res) => {
@@ -277,6 +279,7 @@ function resetSessionState(source = metrics.source) {
     metrics = { ...createMetrics(), source, startedAt: source === 'idle' ? null : Date.now() };
     sessionPlayers.clear();
     sessionVipScores.clear();
+    resetLikeTracker(sessionLikeStats);
     recentEventIds.clear();
 }
 
@@ -399,6 +402,16 @@ function emitGameEvent(event) {
                 playerState.titleExpiresAt = now + Math.max(3000, Number(event.durationMs) || 60000);
             }
         }
+        if (event.type === 'like' && event.likeMilestone) {
+            if (event.giftPower > 0) {
+                playerState.giftPower = Math.max(0, Number(previous.giftPower) || 0) + event.giftPower;
+            }
+            if (event.action === 'medal' && event.label) {
+                playerState.titleLabel = event.label;
+                playerState.titleVariant = event.variant || 'fire';
+                playerState.titleExpiresAt = now + Math.max(3000, Number(event.durationMs) || 60000);
+            }
+        }
         sessionPlayers.set(event.userId, playerState);
         pruneSessionPlayers(now);
     }
@@ -427,12 +440,18 @@ function emitGameEvent(event) {
 function processGameEvent(inputEvent) {
     const safeEvent = sanitizeGameEvent(inputEvent);
     if (!safeEvent) return;
-    const event = applyBuiltInChatCommand(applyRule(safeEvent, resolveMasterRule(masterConfig, safeEvent)));
+    const event = applyLikeMilestones(
+        applyBuiltInChatCommand(applyRule(safeEvent, resolveMasterRule(masterConfig, safeEvent))),
+        sessionLikeStats,
+        gameConfig.likeMilestones
+    );
     const isKnownPlayer = event.userId && sessionPlayers.has(event.userId);
+    const isNewViewer = Boolean(event.userId && !isKnownPlayer);
     const joinsByKeyword = event.type === 'chat' && event.action === 'join';
     const joinsBySocial = event.type === 'follow' || event.type === 'share';
-    event.joinedNow = Boolean((joinsByKeyword || joinsBySocial) && !isKnownPlayer);
-    if (metrics.source !== 'demo' && masterConfig.joinMode === 'keyword_only' && !isKnownPlayer) {
+    const joinsByAnyInteraction = masterConfig.joinMode === 'all_interactions';
+    event.joinedNow = Boolean(isNewViewer && (joinsByKeyword || joinsBySocial || joinsByAnyInteraction));
+    if (metrics.source !== 'demo' && masterConfig.joinMode === 'keyword_only' && isNewViewer) {
         const joinsByGift = event.type === 'gift' && masterConfig.giftAlwaysJoins;
         event.spectatorOnly = !(joinsByKeyword || joinsByGift || joinsBySocial);
     }

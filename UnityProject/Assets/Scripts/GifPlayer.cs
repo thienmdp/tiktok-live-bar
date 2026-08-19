@@ -17,17 +17,20 @@ namespace TikTokLiveGame
         private int currentFrame = 0;
         private float frameTimer = 0f;
 
-        private void Start()
+        private void Awake()
         {
             targetRenderer = GetComponent<Renderer>();
-            
-            // Cài đặt material hỗ trợ trong suốt (Transparent Unlit)
-            Shader transparentShader = Shader.Find("Unlit/Transparent");
-            if (transparentShader == null) transparentShader = Shader.Find("Sprites/Default");
-            
-            Material mat = new Material(transparentShader);
-            targetRenderer.sharedMaterial = mat;
+            if (targetRenderer.sharedMaterial == null)
+            {
+                Shader transparentShader = Shader.Find("Unlit/Transparent");
+                if (transparentShader == null) transparentShader = Shader.Find("Sprites/Default");
+                targetRenderer.sharedMaterial = new Material(transparentShader);
+            }
+            targetRenderer.sharedMaterial.renderQueue = 3100;
+        }
 
+        private void Start()
+        {
             StartCoroutine(LoadFramesAsync());
         }
 

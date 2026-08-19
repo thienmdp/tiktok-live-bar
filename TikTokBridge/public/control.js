@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────────────────────
-   ÔNG CHÚ MMO — Control Panel JS
-   © 2025 ÔNG CHÚ MMO — ongchummo.com
+   THIENMDP — Control Panel JS
+   © 2025 THIENMDP — ongchummo.com
    Zalo: 0977.896.644 | Website: https://ongchummo.com
 ───────────────────────────────────────────────────────── */
 
@@ -55,7 +55,7 @@ const ui = {
 /* ═══ STATE ══════════════════════════════════════════════ */
 let socket;
 let reconnectTimer;
-let masterConfig = { joinMode: 'keyword_only', giftAlwaysJoins: true, rules: [] };
+let masterConfig = { joinMode: 'all_interactions', giftAlwaysJoins: true, rules: [] };
 const recentGifts = new Map();
 
 /* ═══ WEBSOCKET ══════════════════════════════════════════ */
@@ -152,7 +152,7 @@ function createRuleRow(rule) {
 
 function renderMaster(config) {
     masterConfig = config || masterConfig;
-    ui.joinMode.value        = masterConfig.joinMode || 'keyword_only';
+    ui.joinMode.value        = masterConfig.joinMode || 'all_interactions';
     ui.giftAlwaysJoins.checked = masterConfig.giftAlwaysJoins !== false;
     ui.masterRules.replaceChildren(...(masterConfig.rules || []).map(createRuleRow));
 }

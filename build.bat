@@ -4,7 +4,7 @@ chcp 65001 >nul
 
 set "ROOT=%~dp0"
 set "PROJECT_DIR=%ROOT%UnityProject"
-set "OUTPUT_EXE=%ROOT%Build\OngChuMMO_Live.exe"
+set "OUTPUT_EXE=%ROOT%Build\THIENMDP_Live.exe"
 set "LOG_FILE=%ROOT%build_log.txt"
 set "PROJECT_VERSION="
 
@@ -23,7 +23,7 @@ if not exist "%UNITY_EXE%" (
 )
 
 echo =======================================
-echo     BUILD GAME ONG CHU MMO LIVE
+echo     BUILD GAME THIENMDP LIVE
 echo =======================================
 echo Unity: %PROJECT_VERSION%
 echo Output: %OUTPUT_EXE%
@@ -54,6 +54,10 @@ if exist "%ROOT%DJ_VIDEO" (
     if not exist "%ROOT%Build\DJ_VIDEO" mkdir "%ROOT%Build\DJ_VIDEO"
     copy /Y "%ROOT%DJ_VIDEO\BPM.txt" "%ROOT%Build\DJ_VIDEO\" >nul 2>&1
     for %%E in (mp4 mov m4v webm png jpg jpeg) do copy /Y "%ROOT%DJ_VIDEO\*.%%E" "%ROOT%Build\DJ_VIDEO\" >nul 2>&1
+)
+if exist "%ROOT%LiveAssets" (
+    if not exist "%ROOT%Build\LiveAssets" mkdir "%ROOT%Build\LiveAssets"
+    xcopy /E /Y /I "%ROOT%LiveAssets\*" "%ROOT%Build\LiveAssets\" >nul 2>&1
 )
 
 echo.

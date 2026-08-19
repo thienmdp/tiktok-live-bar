@@ -170,6 +170,15 @@ namespace TikTokLiveGame
                 float duration = data.durationMs > 0 ? data.durationMs / 1000f : Mathf.Clamp(data.diamondCount, 3f, 7f);
                 ApplyAction(actor, data, duration);
             }
+            else if (data.type == "like")
+            {
+                if (data.giftPower > 0) actor.AddGiftPower(data.giftPower);
+                if (!string.IsNullOrWhiteSpace(data.action))
+                {
+                    float duration = data.durationMs > 0 ? data.durationMs / 1000f : 4f;
+                    ApplyAction(actor, data, duration);
+                }
+            }
             else if (data.type is "follow" or "share") actor.Celebrate();
         }
 

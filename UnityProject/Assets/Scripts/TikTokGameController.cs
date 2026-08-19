@@ -91,6 +91,8 @@ namespace TikTokLiveGame
             else if (liveEvent.type == "like")
             {
                 AddEnergy(liveEvent.likeCount * 0.08f);
+                if (!string.IsNullOrWhiteSpace(liveEvent.action))
+                    AddFeed($"{liveEvent.nickname} — {liveEvent.label}", new Color(1f, 0.45f, 0.72f));
             }
             else if (liveEvent.type == "member")
             {
@@ -117,11 +119,16 @@ namespace TikTokLiveGame
                 PlayerActor actor = playerManager.Find(liveEvent.userId);
                 giftEffects.Play(liveEvent, actor);
             }
+            else if (liveEvent.type == "like" && !string.IsNullOrWhiteSpace(liveEvent.action))
+            {
+                PlayerActor actor = playerManager.Find(liveEvent.userId);
+                giftEffects.PlayLikeReward(liveEvent, actor);
+            }
 
             bool joinFocus = liveEvent.action == "join" && liveEvent.joinedNow;
             bool socialFocus = liveEvent.type is "follow" or "share";
             bool requestsFocus = joinFocus || socialFocus || liveEvent.action is "camera" or "walk" or "vip" or "topdj" or "fireworks" or "medal";
-            if (requestsFocus && (liveEvent.type is "gift" or "chat" or "follow" or "share"))
+            if (requestsFocus && (liveEvent.type is "gift" or "chat" or "follow" or "share" or "like"))
             {
                 PlayerActor actor = playerManager.Find(liveEvent.userId);
                 if (actor == null) return;
@@ -137,7 +144,7 @@ namespace TikTokLiveGame
                     clubCamera?.Focus(
                         actor,
                         focusSeconds,
-                        liveEvent.action is "vip" or "topdj" || liveEvent.diamondCount >= 100,
+                        liveEvent.action is "vip" or "topdj" or "medal" || liveEvent.diamondCount >= 100,
                         wideWalkFocus);
                 // A first-time "hey" is a clean welcome shot. Gift focuses keep
                 // the crowd dimming and VIP decoration handled by PlayerManager.
@@ -209,7 +216,7 @@ namespace TikTokLiveGame
         private void DrawHeader(float width)
         {
             GUI.Box(new Rect(18, 16, width - 36, 58), GUIContent.none, panelStyle);
-            GUI.Label(new Rect(34, 23, 245, 28), "ÔNG CHÚ MMO", titleStyle);
+            GUI.Label(new Rect(34, 23, 245, 28), "THIENMDP", titleStyle);
             string node = client != null && client.IsConnected ? "NODE ONLINE" : "NODE OFFLINE";
             GUI.Label(new Rect(275, 29, 95, 22), node, smallStyle);
             if (width > 900f) GUI.Label(new Rect(width - 250, 24, 230, 24), "F1 CONTROL   F2 CHROMA", smallStyle);

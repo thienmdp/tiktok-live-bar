@@ -41,6 +41,41 @@ test('chat hey maps to join', () => {
     assert.equal(rule.action, 'join');
 });
 
+test('contains match works inside longer chat messages', () => {
+    const config = sanitizeMasterConfig({
+        rules: [
+            { id: 'dance', source: 'chat', trigger: 'nhay, nhảy, dance', match: 'contains', action: 'dance' }
+        ]
+    });
+    const rule = resolveMasterRule(config, { type: 'chat', comment: 'Em muốn nhảy cùng DJ nha' });
+    assert.equal(rule.id, 'dance');
+    assert.equal(applyRule({ type: 'chat', comment: 'Em muốn nhảy cùng DJ nha' }, rule).action, 'dance');
+});
+
+test('chat thienmdp maps to vip spotlight', () => {
+    const config = sanitizeMasterConfig(require('../config/master.json'));
+    const rule = resolveMasterRule(config, { type: 'chat', comment: 'Yeu thienmdp qua di' });
+    assert.equal(rule.id, 'chat-thienmdp-vip');
+    const event = applyRule({ type: 'chat', comment: 'Yeu thienmdp qua di' }, rule);
+    assert.equal(event.action, 'vip');
+    assert.equal(event.label, 'THIENMDP VIP');
+});
+
+test('chat no longer triggers exclusive gift-only effects', () => {
+    const config = sanitizeMasterConfig(require('../config/master.json'));
+    assert.equal(resolveMasterRule(config, { type: 'chat', comment: 'cho zoom camera di' }), null);
+    assert.equal(resolveMasterRule(config, { type: 'chat', comment: 'ban phao hoa di' }), null);
+    assert.equal(resolveMasterRule(config, { type: 'chat', comment: 'top dj king' }), null);
+    assert.equal(resolveMasterRule(config, { type: 'chat', comment: 'vip pro dinh' }), null);
+});
+
+test('simple gift rules still resolve exclusive effects', () => {
+    const config = sanitizeMasterConfig(require('../config/master.json'));
+    const rose = resolveMasterRule(config, { type: 'gift', giftId: '5655', giftName: 'Rose' });
+    assert.equal(rose.id, 'gift-rose-camera');
+    assert.equal(applyRule({ type: 'gift' }, rose).action, 'camera');
+});
+
 test('jump and nhảy comments trigger a short built-in jump without a gift rule', () => {
     assert.equal(applyBuiltInChatCommand({ type: 'chat', comment: 'jump' }).action, 'jump');
     const event = applyBuiltInChatCommand({ type: 'chat', comment: 'NHẢY' });

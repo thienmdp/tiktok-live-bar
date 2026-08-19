@@ -35,7 +35,7 @@ function sanitizeRule(input = {}) {
 
 function sanitizeMasterConfig(input = {}) {
     return {
-        joinMode: input.joinMode === 'all_interactions' ? 'all_interactions' : 'keyword_only',
+        joinMode: input.joinMode === 'keyword_only' ? 'keyword_only' : 'all_interactions',
         giftAlwaysJoins: input.giftAlwaysJoins !== false,
         rules: Array.isArray(input.rules) ? input.rules.slice(0, 100).map(sanitizeRule) : []
     };
